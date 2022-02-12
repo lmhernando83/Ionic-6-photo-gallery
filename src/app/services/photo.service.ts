@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Camera, CameraResultType, CameraSource, Photo } from '@capacitor/camera';
+import { Filesystem, Directory, WriteFileResult } from '@capacitor/filesystem';
 
 export interface IUserPhoto {
   filepath: string;
@@ -25,14 +26,32 @@ export class PhotoService {
     })
     .catch(Error => Error) //<= Avoids display errors on browser console
 
-    console.log('Foto ==>', capturedPhoto)
+    console.log('Foto ==>', capturedPhoto);
 
-    this.photos.unshift({
-      filepath: 'Soon...',
-      webviewPath: (await capturedPhoto).webPath
+    const saveImageFile: IUserPhoto = await this.savePicture(capturedPhoto);
+    this.photos.unshift(saveImageFile)
+
+    console.log('Array de fotos',this.photos);
+  }
+
+  public async savePicture(photo: Promise<Photo>): Promise<any>{
+
+    console.log('SavePicture Photo recive =>', photo);
+
+    const fileName = new Date().getTime() + '.jpeg';
+    const savedFile: Promise<WriteFileResult> = await Filesystem.writeFile({
+      path: fileName,
+      data: (await photo).webPath,
+      directory: Directory.Data
     })
+    .catch(Error => Error);
+    
+    console.log('savePciture return =>', savedFile);
 
-    console.log('Array de fotos',this.photos)
+    return {
+      filepath: fileName,
+      webviewPath: (await photo).webPath
+    };
   }
 
 }
